@@ -28,3 +28,9 @@ B 站弹幕协议是会变的，目前至少改过一次。故不能保证向后
 ## 以此为基础做的弹幕收集系统
 
 [Top 100 UP主的24小时弹幕收集器](https://github.com/lyyyuna/bilibili_danmu_colloector)
+
+_2017.7.10 更新 by duoduoeeee_
+
+按照这篇文章里的代码改了改加入了存储到本地的功能
+
+[Python对各直播平台的弹幕抓取 - 知乎专栏](https://zhuanlan.zhihu.com/p/21360141)

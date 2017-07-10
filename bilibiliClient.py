@@ -7,10 +7,11 @@ from struct import *
 import json
 import config
 import re
+import time
 
 class bilibiliClient():
     def __init__(self):
-        self._CIDInfoUrl = 'http://live.bilibili.com/api/player?id=cid:'
+        self._CIDInfoUrl = 'https://live.bilibili.com/api/player?id=cid:'
         self._roomId = 0
         self._ChatPort = 788
         self._protocolversion = 1
@@ -20,13 +21,17 @@ class bilibiliClient():
         self._UserCount = 0
         self._ChatHost = 'livecmt-1.bilibili.com'
 
-        self._roomId = input('请输入房间号：')
+        self._roomId = input('Where is yousa? ')
         self._roomId = int(self._roomId)
+        self.wallonclock=str(time.strftime("%Y-%m-%d", time.localtime()))
+        self.danmakutime=str(time.strftime("%H:%M:%S", time.localtime()))
+        self.f=open("com.bilibili.tv"+"-"+str(self._roomId)+"-"+self.wallonclock+".txt",'a')
 
     async def connectServer(self):
-        print ('正在进入房间。。。。。')
+        print ('Come on, Bilibili go!')
+        self.f.write('Come on, Bilibili go!'+"\n")
         with aiohttp.ClientSession() as s:
-            async with s.get('http://live.bilibili.com/' + str(self._roomId)) as r:
+            async with s.get('https://live.bilibili.com/' + str(self._roomId)) as r:
                 html = await r.text()
                 m = re.findall(r'ROOMID\s=\s(\d+)', html)
                 ROOMID = m[0]
@@ -43,11 +48,12 @@ class bilibiliClient():
         reader, writer = await asyncio.open_connection(self._ChatHost, self._ChatPort)
         self._reader = reader
         self._writer = writer
-        print ('链接弹幕中。。。。。')
+        print ('Welcome to Bilibili.')
+        self.f.write('Welcome to Bilibili.'+"\n")
         if (await self.SendJoinChannel(self._roomId) == True):
             self.connected = True
-            print ('进入房间成功。。。。。')
-            print ('链接弹幕成功。。。。。')
+            print ('Battle system engaged.')
+            self.f.write('Battle system engaged.' +"\n")
             await self.ReceiveMessageLoop()
 
     async def HeartbeatLoop(self):
@@ -93,7 +99,8 @@ class bilibiliClient():
                 if num==0 or num==1 or num==2:
                     tmp = await self._reader.read(4)
                     num3, = unpack('!I', tmp)
-                    print ('房间人数为 %s' % num3)
+                    print ('【系统】房间人数为 %s' % num3)
+                    self.f.write ('【系统】房间人数为 %s' % num3+"\n")
                     self._UserCount = num3
                     continue
                 elif num==3 or num==4:
@@ -121,10 +128,12 @@ class bilibiliClient():
             return
         cmd = dic['cmd']
         if cmd == 'LIVE':
-            print ('直播开始。。。')
+            print ('【系统】直播开始')
+            self.f.write('【系统】直播开始'+'\n')
             return
         if cmd == 'PREPARING':
-            print ('房主准备中。。。')
+            print ('【系统】房主准备中')
+            self.f.write('【系统】房主准备中'+'\n')
             return
         if cmd == 'DANMU_MSG':
             commentText = dic['info'][1]
@@ -132,11 +141,12 @@ class bilibiliClient():
             isAdmin = dic['info'][2][2] == '1'
             isVIP = dic['info'][2][3] == '1'
             if isAdmin:
-                commentUser = '管理员 ' + commentUser
+                commentUser = '【管理员】' + commentUser
             if isVIP:
-                commentUser = 'VIP ' + commentUser
+                commentUser = '【VIP】' + commentUser
             try:
-                print (commentUser + ' say: ' + commentText)
+                print (commentUser + '说：' + commentText)
+                self.f.write (commentUser + '说：' + commentText + '（' + self.danmakutime + '）' + '\n')
             except:
                 pass
             return
@@ -146,14 +156,16 @@ class bilibiliClient():
             Giftrcost = dic['data']['rcost']
             GiftNum = dic['data']['num']
             try:
-                print(GiftUser + ' 送出了 ' + str(GiftNum) + ' 个 ' + GiftName)
+                print('【礼物】'+GiftUser + ' 送出了 ' + str(GiftNum) + ' 个 ' + GiftName)
+                self.f.write('【礼物】'+GiftUser + ' 送出了 ' + str(GiftNum) + ' 个 ' + GiftName+'\n')
             except:
                 pass
             return
         if cmd == 'WELCOME' and config.TURN_WELCOME == 1:
             commentUser = dic['data']['uname']
             try:
-                print ('欢迎 ' + commentUser + ' 进入房间。。。。')
+                print ('【系统】'+ commentUser + ' 进入房间')
+                self.f.write('【系统】' + commentUser + ' 进入房间'+'\n')
             except:
                 pass
             return
